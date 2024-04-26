@@ -16,6 +16,7 @@ echo "Training single mug"
 # echo policy "${POLICY}"
 
 # LAUNCHER="basic"
+# 单纯的先赋值给LAUNCHER
 LAUNCHER="faircluster"
 
 if [ "${POLICY}" == "proprio" ]; then
@@ -23,9 +24,9 @@ if [ "${POLICY}" == "proprio" ]; then
     CUDA_VISIBLE_DEVICES=${GPUS} \
     python3.8 NCFgym/isaacgymenvs/train_cluster.py -m \
      task=NCFTaskMugCupholderPlaceTacto \
-     headless=True \
+     headless=True \ # True 表示在没有图形界面的环境中执行
      seed=${SEED} \
-     launcher=${LAUNCHER} \
+     launcher=${LAUNCHER} \ # 运行 ./launcher/faircluster.yaml faircluster 可能表示分布式训练
      num_envs=256 \
      task.sim.sim_digits=False \
      train.ppo.tactile_info=False \
