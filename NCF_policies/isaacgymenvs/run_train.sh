@@ -1,15 +1,16 @@
 #!/bin/bash
+#获取传入的数据 1 GPU设备号/2 随机数种子/3 缓存目录/4 训练模型策略
 GPUS=$1
 SEED=$2
 CACHE=$3
 POLICY=$4
-
-array=( $@ )
+# 将除此以外的参数传入 EXTRA_ARGS
+array=( $@ )#将所有的参数保存到数组中
 len=${#array[@]}
-EXTRA_ARGS=${array[@]:4:$len}
+EXTRA_ARGS=${array[@]:4:$len}#获取从第五个参数开始的所有参数
 EXTRA_ARGS_SLUG=${EXTRA_ARGS// /_}
 
-echo extra "${EXTRA_ARGS}"
+echo extra "${EXTRA_ARGS}"#使用 echo 打印额外参数，以便在脚本执行时查看传入的参数
 
 echo "Training single mug"
 # echo policy "${POLICY}"
