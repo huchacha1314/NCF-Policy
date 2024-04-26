@@ -1,18 +1,23 @@
 # @package _global_
 defaults:
+# defaults 定义了一组默认配置，这些配置会被应用到整个 Hydra 配置中的所有任务中， 因为会包含很多任务， 同时用defaults进行一定的‘初始化’
   - override /hydra/launcher: submitit_slurm
+  # 设置了默认的启动器为 submitit_slurm 
+  # override 表示覆盖之前的设置
   - _self_
+  # 设置了当前任务的默认值为 _self_，表示使用当前任务的默认配置
 
 hydra_dir: "/checkpoint/${user}/gum/${task.name}/${now:%Y.%m.%d}/${now:%H.%M.%S}"
+# user task.name 等信息 可以通过插值获取
 
 hydra:
   job:
-    chdir: False
+    chdir: False # 不改变当前工作目录
   launcher:    
-    cpus_per_task: 40
-    partition: learnfair
+    cpus_per_task: 40 #cpu 核心数量
+    partition: learnfair 
     timeout_min: 4320
-    gpus_per_node: 4
+    gpus_per_node: 4 # 每个节点可用GPU数目
     tasks_per_node: 1
     # mem_gb: 80
     constraint: volta32gb
@@ -21,3 +26,11 @@ hydra:
 
   sweep: 
     dir: "${hydra_dir}"
+
+
+
+设置默认值：通过 defaults 部分设置了一些默认值，包括了启动器类型、任务执行参数等。这些默认值可以在整个项目中共享和重用，简化了配置管理的过程。
+定义输出文件路径：通过 hydra_dir 定义了 Hydra 输出文件的存储路径。使用了 Hydra 的插值语法，动态获取当前用户和任务名称，从而构造了一个动态的输出路径。
+配置 Hydra 作业参数：通过 hydra 部分定义了 Hydra 作业的参数，包括了作业执行参数、启动器配置、参数扫描配置等。这些配置可以控制 Hydra 作业的行为，如作业执行的环境、资源分配、超时设置等。
+支持分布式训练：通过配置启动器参数，如 cpus_per_task、gpus_per_node 等，支持在集群中进行分布式训练，有效利用计算资源，提高训练效率。
+支持参数扫描：通过配置参数扫描的目录路径，支持对参数进行扫描和组合，从而进行超参数搜索或者参数优化。
