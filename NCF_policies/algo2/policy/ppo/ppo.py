@@ -261,7 +261,7 @@ class PPO(object):
             self.reset_ncf_buffers()
 
     def reset_digits_fifo(self):
-        #重置存储数字和末端执行器信息的FIFO队列，分别存储左手和右手的触觉序列数据
+        #重置存储digit的FIFO队列，分别存储左手和右手的触觉序列数据
         self.digit_left_fifo = torch.zeros(
             (self.num_actors, self.tactile_seq_length, self.tactile_info_embed_dim),
             dtype=torch.float32,
@@ -274,6 +274,7 @@ class PPO(object):
         )
 
     def reset_eef_fifo(self):
+        #同时重置末端执行器FIFO队列
         self.eef_fifo = torch.zeros(
             (self.num_actors, self.tactile_seq_length, 7),
             dtype=torch.float32,
@@ -282,10 +283,12 @@ class PPO(object):
         self.eef_fifo[:, :, -1] = 1.0
 
     def reset_ncf_buffers(self):
+        #同时重置digit和末端执行器FIFO队列
         self.reset_digits_fifo()
         self.reset_eef_fifo()
 
     def write_stats(self, a_losses, c_losses, b_losses, entropies, kls, grad_norms):
+        #记录训练过程中的性能指标，如训练帧率、损失等，并将其写入TensorBoard
         self.writer.add_scalar(
             "performance/RLTrainFPS",
             self.agent_steps / self.rl_train_time,
@@ -321,6 +324,7 @@ class PPO(object):
             self.writer.add_scalar(f"{k}", v, self.agent_steps)
 
     def set_eval(self):
+        #将模型设置为评估模式，并根据需要对输入进行归一化处理
         self.model.eval()
         if self.normalize_input:
             self.obs_mean_std.eval()
@@ -330,6 +334,7 @@ class PPO(object):
             self.point_cloud_mean_std.eval()
 
     def set_train(self):
+        #将模型设置为训练模式，并根据需要对输入进行归一化处理
         self.model.train()
         if self.normalize_input:
             self.obs_mean_std.train()
@@ -339,6 +344,7 @@ class PPO(object):
             self.point_cloud_mean_std.train()
 
     def _get_ncf_output(self, obs_dict):
+        #？？？CHECK 根据观察信息获取神经网络的输出，如果使用地面实况数据，则直接使用该数据，否则根据当前环境状态调用神经网络生成触觉信息
         if self.ncf_use_gt:
             contact_gt = obs_dict["gt_extrinsic_contact"]
             contact = contact_gt
@@ -411,6 +417,7 @@ class PPO(object):
         return contact_gt, contact, idx_query
 
     def get_policy_inputs(self, obs_dict):
+        #获取用于策略网络输入的观察数据，如果启用触觉信息，则将触觉信息与其他观察数据合并后进行处理
         if self.tactile_info:
             self._add_to_ncf_buffers(obs_dict)
             digits_emb_left = self.digit_left_fifo.reshape(
@@ -432,6 +439,7 @@ class PPO(object):
         return processed_obs, aug_obs
 
     def model_act(self, obs_dict):
+        #根据观察数据获取策略网络的动作输出，并根据需要对私有信息进行处理
         processed_obs, aug_pos = self.get_policy_inputs(obs_dict)
         point_cloud = None
 
@@ -807,6 +815,7 @@ class PPO(object):
         return a_losses, c_losses, b_losses, entropies, kls, grad_norms
 
     def play_steps(self):
+        #在环境中执行一系列动作，用于数据采集和训练
         for n in range(self.horizon_length):
             res_dict, aug_pos = self.model_act(self.obs)
 
@@ -908,6 +917,7 @@ class PPO(object):
         self.storage.data_dict["returns"] = returns
 
     def _digit_encode(self, images):
+        #使用数字编码模型将输入的数字图像编码成嵌入向量
         images = images.permute(0, 1, 4, 2, 3)
         with torch.no_grad():
             images_hat, digit_embeddings = self.digit_vae(images)
@@ -915,6 +925,7 @@ class PPO(object):
         return digit_embeddings.unsqueeze(1), images_hat
 
     def _add_to_ncf_buffers(self, obs_dict):
+        #将观察信息中的数字和末端执行器数据添加到NCF缓冲区中
         if obs_dict["obs"].sum() != 0:
             if self.eef_fifo[:, :, 0:3].sum() == 0:
                 self.eef_fifo = (
