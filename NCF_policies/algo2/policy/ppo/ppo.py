@@ -261,6 +261,7 @@ class PPO(object):
             self.reset_ncf_buffers()
 
     def reset_digits_fifo(self):
+        #重置存储数字和末端执行器信息的FIFO队列，分别存储左手和右手的触觉序列数据
         self.digit_left_fifo = torch.zeros(
             (self.num_actors, self.tactile_seq_length, self.tactile_info_embed_dim),
             dtype=torch.float32,
