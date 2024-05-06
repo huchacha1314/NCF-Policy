@@ -18,6 +18,7 @@ from torch.utils.data import Dataset
 def transform_op(arr):
     """
     swap and then flatten axes 0 and 1
+    它将数组的轴0和轴1进行交换，然后将其展平
     """
     if arr is None:
         return arr
@@ -40,6 +41,8 @@ class ExperienceBuffer(Dataset):
     ):
         self.device = device
         self.num_envs = num_envs
+        #每次抓取尝试中执行的动作序列的长度，也就是机器人在一次尝试中连续执行的步数
+        #可以控制机器人在每次抓取尝试中执行的步数，从而影响抓取过程的持续时间和复杂度。这可以帮助优化机器人的抓取策略，使其在有限的步数内尽可能高效地完成抓取任务。
         self.transitions_per_env = horizon_length
         self.priv_info_dim = priv_dim
 
@@ -64,7 +67,7 @@ class ExperienceBuffer(Dataset):
                     self.transitions_per_env,
                     self.num_envs,
                     self.point_cloud_dim,
-                    3,
+                    3,#3 表示xyz 坐标
                 ),
                 dtype=torch.float32,
                 device=self.device,
@@ -143,6 +146,7 @@ class ExperienceBuffer(Dataset):
         )
 
     def update_mu_sigma(self, mu, sigma):
+        #更新动作均值（mus）和动作标准差（sigmas）
         start = self.last_range[0]
         end = self.last_range[1]
         self.data_dict["mus"][start:end] = mu
