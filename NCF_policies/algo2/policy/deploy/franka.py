@@ -27,6 +27,7 @@ class FrankaEnv:
         use_worldref_pointcloud: bool = True,
     ):
         print("[robot] configuring robot - setting home pose...")
+        # 更改成diana API
         self.robot = RobotInterface(ip_address="172.16.0.1", enforce_version=False)
         self.task_config = task_config
         self.action_scale_pos = action_scale_pos
@@ -154,12 +155,14 @@ class FrankaEnv:
 
     def lift_up(self):
         delta_pos = torch.tensor([0.0, 0.0, 0.05])
+        # 更改成diana API
         self.robot.move_to_ee_pose(position=delta_pos, time_to_go=5.0, delta=True)
         time.sleep(0.1)
 
     def _start_franka_controller(self):
         Kx = [250, 500, 500, 10, 10, 10]
         Kxd = [25, 5, 1, 7, 7, 7]
+        # 更改成diana API
         a = self.robot.start_cartesian_impedance(Kx, Kxd)
         time.sleep(0.1)
         print(a)
@@ -167,7 +170,9 @@ class FrankaEnv:
 
     def reset_franka(self, ep=-1):
         self.lift_up()
+        # 更改成diana API
         self.robot.set_home_pose(self.home_pose)
+        # 更改成diana API
         self.robot.go_home()
         time.sleep(0.5)
         # delta_pos = torch.tensor([0.0, 0.0, -0.05])
@@ -230,6 +235,7 @@ class FrankaEnv:
         return self.obs_dict
 
     def get_ee_offset(self):
+        # 更改成diana API
         ee_pos, ee_quat = self.robot.get_ee_pose()
         offset = torch.tensor([0.4819, 0.07, 0.14])
         ee_pos = ee_pos - offset
@@ -246,6 +252,7 @@ class FrankaEnv:
         return ee_pos, ee_quat
 
     def get_joint_positions(self):
+        # 更改成diana API
         joint_positions = self.robot.get_joint_positions()
         return joint_positions
 
@@ -431,6 +438,7 @@ class FrankaEnv:
 
         # send actions to robot
         try:
+            # 更改成diana API
             res = self.robot.update_desired_ee_pose(
                 position=self.ctrl_target_ee_pos, orientation=self.ctrl_target_ee_quat
             )
@@ -504,6 +512,7 @@ class FrankaEnv:
         self.progress_buf[0] += 1
 
         if done:
+            #
             self.robot.terminate_current_policy()
 
         return self.obs_dict, r, done, info
